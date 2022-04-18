@@ -1,5 +1,6 @@
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from time import sleep
 
 import gym
 import numpy as np
@@ -82,8 +83,13 @@ def evaluate_policy(
     observations = env.reset()
     states = None
     episode_starts = np.ones((env.num_envs,), dtype=bool)
+    print(f'deterministic = {deterministic}')
     while (episode_counts < episode_count_targets).any():
         actions, states = model.predict(observations, state=states, episode_start=episode_starts, deterministic=deterministic)
+        if render:
+            env.render()
+            print(f'rendering after taking actions {actions}')
+            sleep(1)
         observations, rewards, dones, infos = env.step(actions)
         current_rewards += rewards
         current_lengths += 1
