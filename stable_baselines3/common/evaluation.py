@@ -83,13 +83,13 @@ def evaluate_policy(
     observations = env.reset()
     states = None
     episode_starts = np.ones((env.num_envs,), dtype=bool)
-    print(f'deterministic = {deterministic}')
+    # print(f'deterministic = {deterministic}')
     while (episode_counts < episode_count_targets).any():
         actions, states = model.predict(observations, state=states, episode_start=episode_starts, deterministic=deterministic)
-        if render:
-            env.render()
-            print(f'rendering after taking actions {actions}')
-            sleep(1)
+        # if render:
+        #     env.render()
+        #     print(f'rendering after taking actions {actions}')
+        #     sleep(1)
         observations, rewards, dones, infos = env.step(actions)
         current_rewards += rewards
         current_lengths += 1
@@ -125,8 +125,8 @@ def evaluate_policy(
                     current_rewards[i] = 0
                     current_lengths[i] = 0
 
-        if render:
-            env.render()
+    if render:
+        env.render()
 
     mean_reward = np.mean(episode_rewards)
     std_reward = np.std(episode_rewards)
