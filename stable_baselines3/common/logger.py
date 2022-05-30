@@ -579,7 +579,7 @@ class Logger(object):
                 _format.write_sequence(map(str, args))
 
 
-def configure(folder: Optional[str] = None, format_strings: Optional[List[str]] = None, level = INFO) -> Logger:
+def configure(folder: Optional[str] = None, format_strings: Optional[List[str]] = None, level = INFO, init_logger: callable = None) -> Logger:
     """
     Configure the current logger.
 
@@ -603,7 +603,7 @@ def configure(folder: Optional[str] = None, format_strings: Optional[List[str]] 
     format_strings = list(filter(None, format_strings))
     output_formats = [make_output_format(f, folder, log_suffix) for f in format_strings]
 
-    logger = Logger(folder=folder, output_formats=output_formats, level = level)
+    logger = (Logger if init_logger is None else init_logger)(folder=folder, output_formats=output_formats, level = level)
     # Only print when some files will be saved
     if len(format_strings) > 0 and format_strings != ["stdout"]:
         logger.log(f"Logging to {folder}")

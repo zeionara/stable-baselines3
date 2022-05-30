@@ -425,6 +425,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
         """
         Write log.
         """
+
         time_elapsed = time.time() - self.start_time
         fps = int((self.num_timesteps - self._num_timesteps_at_start) / (time_elapsed + 1e-8))
         self.logger.record("time/episodes", self._episode_num, exclude="tensorboard")
@@ -441,6 +442,8 @@ class OffPolicyAlgorithm(BaseAlgorithm):
             self.logger.record("rollout/success_rate", safe_mean(self.ep_success_buffer))
         # Pass the number of timesteps for tensorboard
         self.logger.dump(step=self.num_timesteps)
+        # print(int(time_elapsed), self._episode_num, fps)
+        # print(int(time_elapsed), self._episode_num, safe_mean(self.ep_success_buffer))
 
     def _on_step(self) -> None:
         """
