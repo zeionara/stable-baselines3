@@ -19,6 +19,7 @@ def evaluate_policy(
     reward_threshold: Optional[float] = None,
     return_episode_rewards: bool = False,
     warn: bool = True,
+    max_episode_length: int = None
 ) -> Union[Tuple[float, float], Tuple[List[float], List[int]]]:
     """
     Runs policy for ``n_eval_episodes`` episodes and returns average reward.
@@ -91,8 +92,13 @@ def evaluate_policy(
         #     print(f'rendering after taking actions {actions}')
         #     sleep(1)
         observations, rewards, dones, infos = env.step(actions)
-        current_rewards += rewards
-        current_lengths += 1
+
+        if max_episode_length is not None and current_lengths >= max_episode_length:
+            dones = [True for _ in range(n_envs)]
+        else:
+            current_lengths += 1
+            current_rewards += rewards
+
         for i in range(n_envs):
             if episode_counts[i] < episode_count_targets[i]:
 
