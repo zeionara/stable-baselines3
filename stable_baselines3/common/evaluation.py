@@ -19,7 +19,8 @@ def evaluate_policy(
     reward_threshold: Optional[float] = None,
     return_episode_rewards: bool = False,
     warn: bool = True,
-    max_episode_length: int = None
+    max_episode_length: int = None,
+    evaluation_step_delay: float = None
 ) -> Union[Tuple[float, float], Tuple[List[float], List[int]]]:
     """
     Runs policy for ``n_eval_episodes`` episodes and returns average reward.
@@ -87,10 +88,11 @@ def evaluate_policy(
     # print(f'deterministic = {deterministic}')
     while (episode_counts < episode_count_targets).any():
         actions, states = model.predict(observations, state=states, episode_start=episode_starts, deterministic=deterministic)
-        # if render:
-        #     env.render()
-        #     print(f'rendering after taking actions {actions}')
-        #     sleep(1)
+        if render:
+            env.render()
+            # print(f'rendering after taking actions {actions}')
+            if evaluation_step_delay is not None:
+                sleep(evaluation_step_delay)
         observations, rewards, dones, infos = env.step(actions)
 
         if max_episode_length is not None and current_lengths >= max_episode_length:
