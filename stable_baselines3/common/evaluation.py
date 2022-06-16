@@ -9,6 +9,29 @@ from stable_baselines3.common import base_class
 from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, VecMonitor, is_vecenv_wrapped
 
 
+def group(items, n_items_per_group: int):
+    if len(items) <= n_items_per_group:
+        return [tuple(items)]
+
+    groups = []
+    current_group = None
+    for i, item in enumerate(items):
+        if i % n_items_per_group == 0:
+            if current_group is not None and len(current_group) > 0:
+                groups.append(tuple(current_group))
+            current_group = [item]
+        else:
+            current_group.append(item)
+
+    if len(current_group) > 0:
+        groups.append(tuple(current_group))
+
+    return groups
+
+
+N_ACTIONS_PER_TRACKING_INTERVAL = 2
+
+
 def evaluate_policy(
     model: "base_class.BaseAlgorithm",
     env: Union[gym.Env, VecEnv],
@@ -20,7 +43,9 @@ def evaluate_policy(
     return_episode_rewards: bool = False,
     warn: bool = True,
     max_episode_length: int = None,
-    evaluation_step_delay: float = None
+    evaluation_step_delay: float = None,
+    track_agent_actions_diversity: bool = False,
+    n_tracking_intervals: int = 10
 ) -> Union[Tuple[float, float], Tuple[List[float], List[int]]]:
     """
     Runs policy for ``n_eval_episodes`` episodes and returns average reward.
@@ -75,6 +100,7 @@ def evaluate_policy(
     n_envs = env.num_envs
     episode_rewards = []
     episode_lengths = []
+    actions_history = [] if track_agent_actions_diversity and render else None
 
     episode_counts = np.zeros(n_envs, dtype="int")
     # Divides episodes among different sub environments in the vector as evenly as possible
@@ -88,6 +114,13 @@ def evaluate_policy(
     # print(f'deterministic = {deterministic}')
     while (episode_counts < episode_count_targets).any():
         actions, states = model.predict(observations, state=states, episode_start=episode_starts, deterministic=deterministic)
+
+        if track_agent_actions_diversity and render:
+            actions_history.append(tuple(actions))
+            action_groups = group(actions_history[-n_tracking_intervals * N_ACTIONS_PER_TRACKING_INTERVAL:], N_ACTIONS_PER_TRACKING_INTERVAL)
+            if len(action_groups) >= n_tracking_intervals and len(set(action_groups)) == 1:
+                evaluation_step_delay = None  # If agents starts making the same sequence of actions, then rendering speeds up
+
         if render:
             env.render()
             # print(f'rendering after taking actions {actions}')
